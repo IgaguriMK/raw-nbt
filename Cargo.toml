@@ -12,4 +12,6 @@ keywords = ["minecraft", "nbt", "decoder"]
 category = "encoding"
 
 [dependencies]
+
+[dev-dependencies]
 flate2 = { version = "1.0.5", features = ["rust_backend"], default-features = false }
