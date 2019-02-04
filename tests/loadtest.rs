@@ -4,7 +4,7 @@ use std::io::{BufReader, Read};
 
 use flate2::read::GzDecoder;
 
-use raw_nbt::decode::Parser;
+use raw_nbt::decode::parse;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -55,9 +55,7 @@ fn wrapped_load(path: &str, gzipped: bool) -> Result<()> {
 }
 
 fn assert_parse<R: Read>(r: R) -> Result<()> {
-    let mut parser = Parser::new(r);
-
-    match parser.parse() {
+    match parse(r) {
         Ok(nbt) => {
             eprintln!("{:?}", nbt);
         }

@@ -6,6 +6,11 @@ use std::string::FromUtf8Error;
 
 use crate::*;
 
+pub fn parse<R: Read>(r: R) -> Result<Value> {
+    let mut parser = Parser::new(r);
+    parser.parse()
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum Type {
     End,
@@ -91,7 +96,7 @@ impl From<FromUtf8Error> for ParseError {
 pub type Result<T> = std::result::Result<T, ParseError>;
 
 #[derive(Debug)]
-pub struct Parser<R> {
+struct Parser<R> {
     r: R,
 }
 
