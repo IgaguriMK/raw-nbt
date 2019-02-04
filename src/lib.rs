@@ -1,7 +1,10 @@
+#![doc(html_root_url = "https://docs.rs/raw-nbt/0.1.0")]
+
 pub mod decode;
 
 use std::collections::BTreeMap;
 
+/// An NBT Value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     // basic types
@@ -18,6 +21,9 @@ pub enum Value {
     LongArray(Vec<i64>),
     // list
     EndList,
+    /// Empty byte list.
+    ///
+    /// EmptyByteList variant is distinguished from ByteList because it is often used as empty list of other types.
     EmptyByteList,
     ByteList(Vec<i8>),
     ShortList(Vec<i16>),
@@ -34,4 +40,3 @@ pub enum Value {
 }
 
 pub type Compound = BTreeMap<String, Value>;
-

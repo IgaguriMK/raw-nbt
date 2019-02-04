@@ -6,6 +6,10 @@ use std::string::FromUtf8Error;
 
 use crate::*;
 
+/// Parse NBT binary into Value.
+/// 
+/// Input stream should be plain NBT binary.
+/// If you need decompress, use other crate (ex: flate2).
 pub fn parse<R: Read>(r: R) -> Result<Value> {
     let mut parser = Parser::new(r);
     parser.parse()
@@ -44,26 +48,29 @@ impl Type {
             10 => Ok(Type::Compound),
             11 => Ok(Type::IntArray),
             12 => Ok(Type::LongArray),
-            _ => Err(ParseError::UnknownTag),
+            b => Err(ParseError::UnknownTag(b)),
         }
     }
 }
 
+/// NBT Parse error.
 #[derive(Debug)]
 pub enum ParseError {
-    UnexpectedEnd,
     InvalidUTF8(FromUtf8Error),
-    UnknownTag,
     ReadError(io::Error),
+    UnexpectedEndOfInput,
+    UnexpectedTag,
+    UnknownTag(u8),
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ParseError::UnexpectedEnd => write!(f, "unexpected input end"),
             ParseError::InvalidUTF8(ref cause) => cause.fmt(f),
-            ParseError::UnknownTag => write!(f, "found unknown tag"),
             ParseError::ReadError(ref cause) => cause.fmt(f),
+            ParseError::UnexpectedEndOfInput => write!(f, "unexpected input end"),
+            ParseError::UnexpectedTag => write!(f, "unexpected tag"),
+            ParseError::UnknownTag(b) => write!(f, "found unknown tag {}", b),
         }
     }
 }
@@ -81,7 +88,7 @@ impl std::error::Error for ParseError {
 impl From<io::Error> for ParseError {
     fn from(e: io::Error) -> ParseError {
         match e.kind() {
-            io::ErrorKind::UnexpectedEof => ParseError::UnexpectedEnd,
+            io::ErrorKind::UnexpectedEof => ParseError::UnexpectedEndOfInput,
             _ => ParseError::ReadError(e),
         }
     }
@@ -121,7 +128,7 @@ impl<R: Read> Parser<R> {
 
     fn parse_value_with_tag(&mut self, tag: Type) -> Result<Value> {
         match tag {
-            Type::End => Err(ParseError::UnexpectedEnd),
+            Type::End => Err(ParseError::UnexpectedTag),
             Type::Byte => self.parse_byte(),
             Type::Short => self.parse_short(),
             Type::Int => self.parse_int(),
@@ -211,7 +218,7 @@ impl<R: Read> Parser<R> {
                 Type::LongArray => self.parse_long_array_list(size),
             }
         } else {
-            Err(ParseError::UnexpectedEnd)
+            Err(ParseError::UnexpectedEndOfInput)
         }
     }
 
@@ -399,7 +406,7 @@ impl<R: Read> Parser<R> {
                 let payload = self.parse_value_with_tag(tag)?;
                 root.insert(name, payload);
             } else {
-                return Err(ParseError::UnexpectedEnd);
+                return Err(ParseError::UnexpectedEndOfInput);
             }
         }
     }
