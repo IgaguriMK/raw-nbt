@@ -4,7 +4,7 @@ use std::io::{BufReader, Read};
 
 use flate2::read::GzDecoder;
 
-use raw_nbt::Parser;
+use raw_nbt::decode::Parser;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
